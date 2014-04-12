@@ -1,0 +1,54 @@
+# Project: LemmingsDSBuilder
+# Makefile created by Dev-C++ 4.9.9.2
+
+CPP  = g++.exe
+CC   = gcc.exe
+WINDRES = windres.exe
+RES  = 
+OBJ  = bmp_loader.o dsx_backbuff.o dsx_sprite.o graphicsglobals.o lemmings_level.o lemmings_texture_archive.o lodepng.o main.o utility.o $(RES)
+LINKOBJ  = bmp_loader.o dsx_backbuff.o dsx_sprite.o graphicsglobals.o lemmings_level.o lemmings_texture_archive.o lodepng.o main.o utility.o $(RES)
+LIBS =  -L"c:/prog/devcbeta/lib" -mwindows -lalleg   -s 
+INCS =  -I"c:/prog/devcbeta/include" 
+CXXINCS =  -I"c:/prog/devcbeta/include"  -I"c:/prog/devcbeta/include/c++" 
+BIN  = LemmingsDSBuilder.exe
+CXXFLAGS = $(CXXINCS)   -fexpensive-optimizations -O2
+CFLAGS = $(INCS)   -fexpensive-optimizations -O2
+RM = rm -f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before LemmingsDSBuilder.exe all-after
+
+
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CPP) $(LINKOBJ) -o "LemmingsDSBuilder.exe" $(LIBS)
+
+bmp_loader.o: bmp_loader.cpp
+	$(CPP) -c bmp_loader.cpp -o bmp_loader.o $(CXXFLAGS)
+
+dsx_backbuff.o: dsx_backbuff.c
+	$(CPP) -c dsx_backbuff.c -o dsx_backbuff.o $(CXXFLAGS)
+
+dsx_sprite.o: dsx_sprite.c
+	$(CPP) -c dsx_sprite.c -o dsx_sprite.o $(CXXFLAGS)
+
+graphicsglobals.o: graphicsglobals.cpp
+	$(CPP) -c graphicsglobals.cpp -o graphicsglobals.o $(CXXFLAGS)
+
+lemmings_level.o: lemmings_level.c
+	$(CPP) -c lemmings_level.c -o lemmings_level.o $(CXXFLAGS)
+
+lemmings_texture_archive.o: lemmings_texture_archive.c
+	$(CPP) -c lemmings_texture_archive.c -o lemmings_texture_archive.o $(CXXFLAGS)
+
+lodepng.o: lodepng.cpp
+	$(CPP) -c lodepng.cpp -o lodepng.o $(CXXFLAGS)
+
+main.o: main.cpp
+	$(CPP) -c main.cpp -o main.o $(CXXFLAGS)
+
+utility.o: utility.c
+	$(CPP) -c utility.c -o utility.o $(CXXFLAGS)
