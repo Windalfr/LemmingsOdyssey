@@ -1,0 +1,81 @@
+<script language="javascript">
+
+
+sets = new Array(" Lems A - Fun",
+                 " Lems B - Tricky",
+                 " Lems C - Taxing",
+                 " Lems D - Mayhem",
+                 "Oh No A - Tame",
+                 "Oh No B - Crazy",
+                 "Oh No C - Wild",
+                 "Oh No D - Wicked",
+                 "Oh No E - Havoc");
+
+
+rets = new Array("Fun",
+                 "Tricky",
+                 "Taxing",
+                 "Mayhem",
+                 "Tame",
+                 "Crazy",
+                 "Wild",
+                 "Wicked",
+                 "Havoc");
+
+for (s = 0; s < 4; s++) {
+   for (b = 0; b < 4; b++) {
+      for (a = 0; a < 10; a++) {
+         if ((("" + b + a) != "00")
+          && (("" + b + a) != "31")
+          && (("" + b + a) != "32")
+          && (("" + b + a) != "33")
+          && (("" + b + a) != "34")
+          && (("" + b + a) != "35")
+          && (("" + b + a) != "36")
+          && (("" + b + a) != "37")
+          && (("" + b + a) != "38")
+          && (("" + b + a) != "39")) {
+            document.write("lemmings_amigalemm_lvl_to_lds LEMMINGS " + rets[s] + " \"" + sets[s] + "/" + b + a + ".lvl\" N<br>");
+            document.write("lemmings_amigalemm_lvl_to_lds LEMMINGS " + rets[s] + " \"" + sets[s] + "/" + b + a + "x.lvl\" N<br>");
+         }
+      }
+   }
+}
+
+for (s = 4; s < 9; s++) {
+   for (b = 0; b < 3; b++) {
+      for (a = 0; a < 10; a++) {
+         if ((("" + b + a) != "00")
+          && (("" + b + a) != "21")
+          && (("" + b + a) != "22")
+          && (("" + b + a) != "23")
+          && (("" + b + a) != "24")
+          && (("" + b + a) != "25")
+          && (("" + b + a) != "26")
+          && (("" + b + a) != "27")
+          && (("" + b + a) != "28")
+          && (("" + b + a) != "29")) { 
+            document.write("lemmings_amigalemm_lvl_to_lds ONML " + rets[s] + " \"" + sets[s] + "/" + b + a + ".lvl\" N<br>");
+            document.write("lemmings_amigalemm_lvl_to_lds ONML " + rets[s] + " \"" + sets[s] + "/" + b + a + "x.lvl\" N<br>");
+         }
+      }
+   }
+}
+
+for (a = 1; a <= 16; a++) {
+   document.write("lemmings_amigalemm_lvl_to_lds XMAS Frost    \"Xmas A - Frost/Xmas94Lvl"  + a        + ".lvl\" N<br>");
+}
+
+for (a = 1; a <= 16; a++) {
+   document.write("lemmings_amigalemm_lvl_to_lds XMAS Hail     \"Xmas B - Hail/Xmas94Lvl"   + (a + 16) + ".lvl\" N<br>");
+}
+
+for (a = 1; a <= 16; a++) {
+   document.write("lemmings_amigalemm_lvl_to_lds XMAS Flurry   \"Xmas C - Flurry/Xmas93Lvl" + a        + ".lvl\" N<br>");
+}
+
+for (a = 1; a <= 16; a++) {
+   document.write("lemmings_amigalemm_lvl_to_lds XMAS Blizzard \"Xmas D - Blizz/Xmas93Lvl"  + (a + 16) + ".lvl\" N<br>");
+}
+
+</script>

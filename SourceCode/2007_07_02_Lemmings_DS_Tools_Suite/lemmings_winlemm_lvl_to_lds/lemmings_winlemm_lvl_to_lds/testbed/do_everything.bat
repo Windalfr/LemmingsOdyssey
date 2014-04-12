@@ -1,0 +1,11 @@
+echo clean_up_final_lds
+call clean_up_final_lds.bat
+
+echo replace_missing_levels
+call replace_missing_levels.bat
+
+echo convert_all_levels
+call convert_all_levels.bat
+
+echo individually_fix_damaged_levels
+call individually_fix_damaged_levels.bat

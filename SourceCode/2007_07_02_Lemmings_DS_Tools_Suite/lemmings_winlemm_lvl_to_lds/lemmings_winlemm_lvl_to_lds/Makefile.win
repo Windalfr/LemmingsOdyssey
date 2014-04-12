@@ -1,0 +1,48 @@
+# Project: lemmings_amigalemm_lvl_to_lds
+# Makefile created by Dev-C++ 4.9.9.2
+
+CPP  = g++.exe
+CC   = gcc.exe
+WINDRES = windres.exe
+RES  = 
+OBJ  = lemmings_level.o main.o utility.o windows_lemmings_level.o windows_lemmings_terra_object.o lemmings_texture_archive.o lodepng.o $(RES)
+LINKOBJ  = lemmings_level.o main.o utility.o windows_lemmings_level.o windows_lemmings_terra_object.o lemmings_texture_archive.o lodepng.o $(RES)
+LIBS =  -L"c:/prog/devcbeta/lib"  -s 
+INCS =  -I"c:/prog/devcbeta/include" 
+CXXINCS =  -I"c:/prog/devcbeta/include"  -I"c:/prog/devcbeta/include/c++" 
+BIN  = lemmings_amigalemm_lvl_to_lds.exe
+CXXFLAGS = $(CXXINCS)   -traditional-cpp -fno-access-control -fexpensive-optimizations -O3
+CFLAGS = $(INCS)   -traditional-cpp -fno-access-control -fexpensive-optimizations -O3
+RM = rm -f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before lemmings_amigalemm_lvl_to_lds.exe all-after
+
+
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CPP) $(LINKOBJ) -o "lemmings_amigalemm_lvl_to_lds.exe" $(LIBS)
+
+lemmings_level.o: lemmings_level.c utility.h types.h ds_types.h   c:/prog/devcbeta/include/string.h c:/prog/devcbeta/include/_mingw.h   c:/prog/devcbeta/include/stddef.h lemmings_level.h   lemmings_texture_archive.h lemmings_level_appended_texture.h
+	$(CPP) -c lemmings_level.c -o lemmings_level.o $(CXXFLAGS)
+
+main.o: main.cpp c:/prog/devcbeta/include/stdio.h   c:/prog/devcbeta/include/_mingw.h c:/prog/devcbeta/include/stddef.h   c:/prog/devcbeta/include/stdarg.h c:/prog/devcbeta/include/sys/types.h   c:/prog/devcbeta/include/stdlib.h c:/prog/devcbeta/include/string.h   lemmings_level.h utility.h types.h ds_types.h   lemmings_texture_archive.h lemmings_graphical_object.h   windows_lemmings_level.h windows_lemmings_terra_object.h lodepng.h
+	$(CPP) -c main.cpp -o main.o $(CXXFLAGS)
+
+utility.o: utility.c utility.h types.h ds_types.h
+	$(CPP) -c utility.c -o utility.o $(CXXFLAGS)
+
+windows_lemmings_level.o: windows_lemmings_level.cpp   c:/prog/devcbeta/include/stdlib.h c:/prog/devcbeta/include/_mingw.h   c:/prog/devcbeta/include/stddef.h c:/prog/devcbeta/include/stdio.h   c:/prog/devcbeta/include/stdarg.h c:/prog/devcbeta/include/sys/types.h   windows_lemmings_level.h utility.h types.h ds_types.h
+	$(CPP) -c windows_lemmings_level.cpp -o windows_lemmings_level.o $(CXXFLAGS)
+
+windows_lemmings_terra_object.o: windows_lemmings_terra_object.cpp   windows_lemmings_terra_object.h
+	$(CPP) -c windows_lemmings_terra_object.cpp -o windows_lemmings_terra_object.o $(CXXFLAGS)
+
+lemmings_texture_archive.o: lemmings_texture_archive.c   lemmings_texture_archive.h ds_types.h
+	$(CPP) -c lemmings_texture_archive.c -o lemmings_texture_archive.o $(CXXFLAGS)
+
+lodepng.o: lodepng.cpp lodepng.h
+	$(CPP) -c lodepng.cpp -o lodepng.o $(CXXFLAGS)

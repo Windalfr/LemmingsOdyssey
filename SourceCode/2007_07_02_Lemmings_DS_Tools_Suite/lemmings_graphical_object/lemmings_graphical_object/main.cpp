@@ -1,0 +1,521 @@
+//
+// Lemmings DS - lemmings_texture_archiver
+//
+// (c) March 2007
+//
+// main.cpp
+//   lemmings_texture_archiver application converts a directory of
+//   consecutively named 16 or 256 colour paletted png files and
+//   outputs a 'lemmings_texture_archive' .LTA file containing all
+//   of the textures ready to be accessed as a 'USING' by Lemmings
+//   DS v4.
+//
+// By Mathew Carr. 
+// mattcarr@gmail.com
+//
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <iostream>
+#include <vector>
+#include <string>
+
+#define DONT_NEED_DSX 0
+
+#include "lemmings_graphical_object.h"
+
+// This program uses LodePNG by Lode Vandevenne
+// See LodePNG.h for further information.
+#include "lodepng.h"
+
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+#define max(a, b) (((a) > (b)) ? (a) : (b))
+
+// Does the file exist?
+bool file_exists(const char *filename) {
+   FILE *input_file;
+
+   input_file = fopen(filename, "rb");
+
+   if (input_file == NULL) {
+      return false;
+   } else {
+      fclose(input_file);
+      return true;
+   }
+}
+          
+// Get the file size through ftell.
+int file_size(const char *filename) {
+   FILE *input_file;
+
+   input_file = fopen(filename, "rb");
+
+   if (input_file == NULL) {
+      return 0;
+   } else {                 
+      fseek(input_file, 0, SEEK_END);  
+      int length = ftell(input_file);
+   
+      fclose(input_file);
+      return length;
+   }    
+}
+
+// Returns the argument a incrased to the next d.
+int to_next(int a, int d) {
+   return ((a + (d-1)) / d) * d;
+}
+
+// Identify arguments and determine ideal number of arguments to expect.
+enum MAIN_ARGUMENT {
+   MAIN_ARGUMENT_APPLICATION_LOCATION,
+   MAIN_ARGUMENT_SOURCE_DIRECTORY,   
+   MAIN_ARGUMENT_GRAPHICAL_OBJECT_TYPE,
+   MAIN_ARGUMENT_NO_IMAGES,
+   MAIN_ARGUMENT_NO_PRIMARY_IMAGES,
+   MAIN_ARGUMENT_NO_SECONDARY_IMAGES,
+   MAIN_ARGUMENT_REPRESENTING_FRAME,
+   MAIN_ARGUMENT_TRANSPARENT_COLOUR,
+   MAIN_ARGUMENT_HANDLE_X,
+   MAIN_ARGUMENT_HANDLE_Y,
+   MAIN_ARGUMENT_ACTIVE_ZONE_X1,
+   MAIN_ARGUMENT_ACTIVE_ZONE_Y1,
+   MAIN_ARGUMENT_ACTIVE_ZONE_X2,
+   MAIN_ARGUMENT_ACTIVE_ZONE_Y2,
+   MAIN_ARGUMENT_FLAGS,
+   MAIN_ARGUMENT_DESCRIPTIVE_NAME,
+   MAIN_ARGUMENT_OUTPUT_FILE_NAME,
+   IDEAL_NO_MAIN_ARGUMENTS,
+};
+
+// Entry point.
+int main(int argc, char *argv[]) {                                        
+      printf("------------------------------------------\n"
+             "------------------------------------------\n"
+             " lemmings_graphical_object by Mathew Carr \n"
+             "------------------------------------------\n"
+             "---------[ http://www.mrdictionary.net ]--\n"
+             "------------------------------------------\n"
+             "\n");
+      
+   // Error if you don't supply the correct number of arguments. They must all be there.
+   if (argc != IDEAL_NO_MAIN_ARGUMENTS) {
+      printf("Bad arguments.\n"
+             "Expected lemmings_graphical_object, then the following parameters:\n"
+             " - SOURCE_DIRECTORY      A path which the program can lop 00.png onto to find  \n"
+             "                         your images. \n"
+             " - GRAPHICAL_OBJECT_TYPE [ 0          exit | 1      entrance | 2         trap ]\n"
+             "                         [ 3        hazard | 4 uninteractive | 5        water ]\n"
+             " - NO_IMAGES             How many images are there in total?\n"
+             " - NO_PRIMARY_IMAGES     (TRAPS) How many images in the primary animation?\n"
+             " - NO_SECONDARY_IMAGES   (TRAPS) How many images in the secondary animation?\n"
+             " - REPRESENTING_FRAME    What frame should be used as preview in LDS Builder?\n"
+             " - TRANSPARENT_COLOUR    Which is the transparent colour in the source images?\n"
+             " - HANDLE_X              Identify the active coordinate within the object.\n"
+             " - HANDLE_Y              Identify the active coordinate within the object.\n"
+             " - ACTIVE_ZONE_X1        Identify the active zone for exits, traps and hazards.\n"
+             " - ACTIVE_ZONE_Y1        Identify the active zone for exits, traps and hazards.\n"
+             " - ACTIVE_ZONE_X2        Identify the active zone for exits, traps and hazards.\n"
+             " - ACTIVE_ZONE_Y2        Identify the active zone for exits, traps and hazards.\n"
+             " - FLAGS                 What special flag numbers should be applied?.\n"
+             " - DESCRIPTIVE_NAME      15 character description for the object. (NO SPACES)\n"
+             " - OUTPUT_FILE_NAME      Specify a .LGO output file name.\n");
+      return 1;
+   }
+   
+   // If the output file exists, error.
+   if (file_exists(argv[MAIN_ARGUMENT_OUTPUT_FILE_NAME])) {
+      printf("Output file exists: Please delete it first.\n");
+      return 1;                         
+   }                     
+   
+   // Parse parameters:
+      
+   int graphical_object_type = 0;
+   int no_images             = 0;
+   int no_primary_images     = 0;
+   int no_secondary_images   = 0;
+   int representing_frame    = 0;
+   int transparent_colour    = 0;
+   int handle_x              = 0;
+   int handle_y              = 0;
+   int active_zone_x1        = 0;
+   int active_zone_y1        = 0;
+   int active_zone_x2        = 0;
+   int active_zone_y2        = 0;
+   int flags                 = 0;
+   char descriptive_name[16] = {0};
+   
+   sscanf(argv[MAIN_ARGUMENT_GRAPHICAL_OBJECT_TYPE], "%d", &graphical_object_type);
+   
+   printf("Interpreted graphical object type: %d...", graphical_object_type);
+   
+   if ((graphical_object_type < 0)
+    || (graphical_object_type > 5)) {
+      printf("\nGraphical object parameter out of range.\n");         
+      return 1;
+   }
+   
+   const char *GRAPHICAL_OBJECT_TYPE_DESCRIPTION[6] = {"Exit",
+                                                       "Entrance",
+                                                       "Trap",
+                                                       "Hazard",
+                                                       "Uninteractive",
+                                                       "Water",};
+   
+   printf(" %s\n", GRAPHICAL_OBJECT_TYPE_DESCRIPTION[graphical_object_type]);
+   
+   sscanf(argv[MAIN_ARGUMENT_NO_IMAGES], "%d", &no_images);
+   
+   printf("Interpreted no images parameter: %d.\n", no_images);
+   
+   if (no_images <= 0) {
+      printf("Don't supply a negative number or zero for number of images!\n");      
+      return 1;                                                                          
+   }
+   
+   sscanf(argv[MAIN_ARGUMENT_NO_PRIMARY_IMAGES], "%d", &no_primary_images);
+   
+   printf("Interpreted no primary images parameter: %d.\n", no_primary_images);
+   
+   if (no_primary_images < 0) {
+      printf("Don't supply a negative number for number of primary images!\n");      
+      return 1;                                                                          
+   }
+   
+   sscanf(argv[MAIN_ARGUMENT_NO_SECONDARY_IMAGES], "%d", &no_secondary_images);
+   
+   printf("Interpreted no secondary images parameter: %d.\n", no_secondary_images);
+   
+   if (no_secondary_images < 0) {
+      printf("Don't supply a negative number for number of secondary images!\n");      
+      return 1;                                                                          
+   }
+   
+   sscanf(argv[MAIN_ARGUMENT_REPRESENTING_FRAME], "%d", &representing_frame);
+   
+   printf("Interpreted representing frame parameter: %d.\n", representing_frame);
+   
+   if ((representing_frame < 0) || (representing_frame >= no_images)) {
+      printf("Out of range parameter for representing frame!\n");      
+      return 1;                                                                          
+   }
+   
+   sscanf(argv[MAIN_ARGUMENT_TRANSPARENT_COLOUR], "%d", &transparent_colour);
+   
+   printf("Interpreted transparent colour parameter: %d.\n", transparent_colour);
+   
+   if (transparent_colour < 0) {
+      printf("Don't supply a negative number for transparent colour parameter!\n");      
+      return 1;                                                                          
+   }
+   
+   sscanf(argv[MAIN_ARGUMENT_HANDLE_X], "%d", &handle_x);
+   sscanf(argv[MAIN_ARGUMENT_HANDLE_Y], "%d", &handle_y);
+   
+   printf("Interpreted handle parameters: %d, %d.\n", handle_x, handle_y);
+   
+   sscanf(argv[MAIN_ARGUMENT_ACTIVE_ZONE_X1], "%d", &active_zone_x1);
+   sscanf(argv[MAIN_ARGUMENT_ACTIVE_ZONE_Y1], "%d", &active_zone_y1);
+   sscanf(argv[MAIN_ARGUMENT_ACTIVE_ZONE_X2], "%d", &active_zone_x2);
+   sscanf(argv[MAIN_ARGUMENT_ACTIVE_ZONE_Y2], "%d", &active_zone_y2);
+   
+   printf("Interpreted active zone parameters: %d, %d, %d, %d.\n", active_zone_x1, active_zone_y1,
+                                                                   active_zone_x2, active_zone_y2);
+   
+   sscanf(argv[MAIN_ARGUMENT_FLAGS], "%d", &flags);
+   
+   printf("Interpreted flags parameter: %d.\n", flags);
+      
+   // Copy the descriptive name over.                                                              
+   strncpy(descriptive_name, argv[MAIN_ARGUMENT_DESCRIPTIVE_NAME], 15);
+   descriptive_name[15] = 0x00;
+   
+   printf("Retrieved descriptive name: '%-15s'.\n"
+          "                             123456789012345\n", descriptive_name);
+   
+   // Set up a vector for storing graphical object frame pointers.
+   // We're going to populate this as the images are loaded,
+   // and then splurge them all out when the loading is
+   // complete.
+   std::vector<void *> graphical_object_graphic_pointers;
+           // (LEMMINGS_GRAPHICAL_OBJECT_GRAPHIC *) 
+   
+   // We don't have a header instance yet, so we need to prepare a temporary location
+   // in which to store the extracted palette.
+   u16 extracted_palette[16];
+   
+   int read_width = 0, read_height = 0;   
+                                         
+   // Loop until told to quit (condition: loaded N images as specified in parameter)
+   for (int frame = 0; frame < no_images; frame++) {    
+      // This decoder will decode the incoming PNG images.
+      LodePNG::Decoder decoder;                         
+              
+      // This stores the PNG file in memory while it is being worked on.
+      std::vector<unsigned char> buffer;   
+      
+      // This stores the PNG decompressed image in memory while it is being worked on.
+      std::vector<unsigned char> image;                          
+      
+      // This holds the filename of the file we're going to load
+      char incoming_image_filename[16384];
+      sprintf(incoming_image_filename, "%s%02d.png",
+                                       argv[MAIN_ARGUMENT_SOURCE_DIRECTORY],
+                                       frame); 
+                                                                                    
+      printf("%s... ", incoming_image_filename);    
+      
+      // Convert image filename into a std::string using this constructor.
+      std::string string_incoming_image_filename = std::string(incoming_image_filename);
+                     
+      // Load in the terrain image PNG.
+      LodePNG::loadFile(buffer, string_incoming_image_filename);  
+      
+      // Decode the image, retaining the image pixel index values.
+      decoder.decodeGeneric(image, buffer);
+      
+      // Check for error here. If there's an error, we're done.
+      if (decoder.hasError()) {
+         if (decoder.getError() == 48) {
+            printf("\nHold it! LodePNG error 48.\nDoes '%s' exist?\n", incoming_image_filename); 
+         } else {
+            printf("\nHold it! LodePNG error != 48.\nMalformed PNG: '%s'?\n", incoming_image_filename); 
+         }
+         return 1;
+      }
+                           
+      // Get image information.
+      // Get the width and height from the first image.
+      if (frame == 0) {
+         read_width  = decoder.getWidth();
+         read_height = decoder.getHeight();   
+      }
+       
+                                                          
+      LodePNG::Decoder::Info image_info_struct = decoder.getInfo();
+         
+      // Get the palette size.
+      unsigned long paletteSize = image_info_struct.paletteSize;
+      
+      printf("has %d colours.\n", paletteSize);
+                                      
+      // This eventuality is very, very bad.
+      if ((paletteSize > 256) || (paletteSize == 0)) {                             
+         printf("Detected truecolour, dying!\n");
+         
+         // Destroy ALL objects in the vector, and terminate.
+         for (int t = 0; t < graphical_object_graphic_pointers.size(); t++) {
+            printf("Killing graphic object %d.\n", t);
+            delete[] ((unsigned char *)(graphical_object_graphic_pointers[t]));
+         }
+         
+         return 1;
+      }
+                                   
+      // Determine the amount of memory required to store a LEMMINGS_TEXTURE_ARCHIVE_TEXTURE
+      // holding this image.       
+      
+      // This is measured in bytes.                                  
+      int memory_size_required       = read_width * read_height;
+      
+      // Increase this to the next word.
+      int memory_size_required_total = to_next(memory_size_required + sizeof(LEMMINGS_GRAPHICAL_OBJECT_GRAPHIC), 4);
+      printf("Reserved %6d bytes (%2d + %6d): %3d colour %4d by %4d texture.\n", memory_size_required_total, sizeof(LEMMINGS_GRAPHICAL_OBJECT_GRAPHIC), memory_size_required, paletteSize, read_width, read_height);
+                                                                          
+      // Reserve memory for this graphic object graphic.
+      LEMMINGS_GRAPHICAL_OBJECT_GRAPHIC *new_graphic_object_graphic =
+           (LEMMINGS_GRAPHICAL_OBJECT_GRAPHIC *)(new unsigned char[memory_size_required_total]);   
+           
+      // Blank the graphic object graphic.
+      memset((void *)new_graphic_object_graphic, 0, memory_size_required_total);  
+                                  
+      // At this pointer to the vector of pointers.                                                               
+      graphical_object_graphic_pointers.push_back((void *)(new_graphic_object_graphic));                                           
+                                 
+      // Now all we have to do, is set the relevant fields in new_graphic_object_graphic,
+      // then move onto the image.
+      new_graphic_object_graphic->graphic_size = memory_size_required_total;
+      
+      // Rob the bytes from the buffer:
+      for (int output_byte = 0; output_byte < image.size(); output_byte++) {   
+         // Copy the byte from the image vector into the data array.        
+            
+         // The transparent colour parameter tells the program what colour
+         // should be transparent.
+         
+         // This means that the specified colour should -become zero- when passed through the program.
+         // We need to swap the transparent colour and zero.
+         
+         if (image[output_byte] == transparent_colour) {
+            new_graphic_object_graphic->data[output_byte] = 0;
+         } else
+         if (image[output_byte] == 0) {
+            new_graphic_object_graphic->data[output_byte] = transparent_colour;
+         } else                                               
+         new_graphic_object_graphic->data[output_byte] = image[output_byte];
+      }
+      
+      // Extract the palette from the first graphic:
+      if (frame == 0) {         
+         for (int palette_entry = 0; palette_entry < (min(16, paletteSize)); palette_entry++) {
+            int i_r, i_g, i_b; // These are the incoming palette colours.
+            
+            int nds_r, nds_g, nds_b; // These are the incoming colours reduced to 15-bit.
+            
+            i_r = image_info_struct.palette[0 + palette_entry * 4];
+            i_g = image_info_struct.palette[1 + palette_entry * 4];
+            i_b = image_info_struct.palette[2 + palette_entry * 4]; 
+            
+            // Reduce the colours to 15 bit.
+            nds_r = (int)((31.9f * ((float)(i_r))) / 255.0f);
+            nds_g = (int)((31.9f * ((float)(i_g))) / 255.0f);
+            nds_b = (int)((31.9f * ((float)(i_b))) / 255.0f);      
+                                                          
+// This macro will convert 5 bit colour channel values into a composite 15 bit NDS colour with enabled alpha.
+#define RGB15A(r,g,b) ((1<<15) | ((b)<<10) | ((g)<<5) | (r))
+
+            u16 nds_colour = RGB15A(nds_r, nds_g, nds_b);
+                                    
+            // Fill in the palette of the level using the colours from the first graphic
+            if (palette_entry == transparent_colour) {                         
+               printf("This colour is transparent. Ignoring.\n");  
+            } else
+            if (palette_entry == 0) { 
+               if (!(transparent_colour >= 16)) { 
+                  printf("Extracted colour %3d: R: %2d   G: %2d   B: %2d\n", transparent_colour, nds_r, nds_g, nds_b);
+               
+                  extracted_palette[transparent_colour] = nds_colour;
+               } else {
+                  printf("Transparent colour lies >= 0x10, so we'll ignore that colour.\n");    
+               }
+            } else {                                      
+               printf("Extracted colour %3d: R: %2d   G: %2d   B: %2d\n", palette_entry, nds_r, nds_g, nds_b);
+               
+               extracted_palette[palette_entry] = nds_colour;
+            }
+         }
+      }                   
+   }      
+               
+   printf("Forcing manic magenta on colour zero.\n");  
+               
+   extracted_palette[0] = 0xFC1F;
+   
+   // This is measured in bits, taken to the next byte, then divided again to get the number of bytes.                                  
+   int memory_size_required_for_header_object_offset_array = no_images * sizeof(u32);
+      
+   // Increase this to the next word.
+   int memory_size_required_for_header_total = to_next(memory_size_required_for_header_object_offset_array + sizeof(LEMMINGS_GRAPHICAL_OBJECT_HEADER), 4);
+   printf("Reserved %4d bytes (%2d + %4d): Header must direct to %d objects.\n",
+                                                                memory_size_required_for_header_total,
+                                                                sizeof(LEMMINGS_GRAPHICAL_OBJECT_HEADER),
+                                                                memory_size_required_for_header_object_offset_array,
+                                                                no_images);
+      
+                                              
+   // Store general information in the header.
+   LEMMINGS_GRAPHICAL_OBJECT_HEADER *generated_header = (LEMMINGS_GRAPHICAL_OBJECT_HEADER *)new unsigned char[memory_size_required_for_header_total];
+   
+   // Blank the header.
+   memset((void *)generated_header, 0, memory_size_required_for_header_total);  
+
+   // Populate header.
+   #define LEMMINGS_LEVEL_VERSION 7
+   generated_header->version_number  = LEMMINGS_LEVEL_VERSION;    
+   
+   generated_header->graphical_object_type    = graphical_object_type;
+   
+   generated_header->graphic_width            = read_width;
+   generated_header->graphic_height           = read_height;
+   
+   generated_header->no_total_frames          = no_images;
+   
+   generated_header->no_primary_frames        = no_primary_images;
+   generated_header->no_secondary_frames      = no_secondary_images;    
+   
+   generated_header->representing_frame       = representing_frame;
+   
+   generated_header->handle_x                 = handle_x;
+   generated_header->handle_y                 = handle_y;
+   
+   generated_header->active_zone_x1           = active_zone_x1;
+   generated_header->active_zone_y1           = active_zone_y1;        
+   generated_header->active_zone_x2           = active_zone_x2;
+   generated_header->active_zone_y2           = active_zone_y2;
+   
+   generated_header->active_flags             = flags;
+   
+   memcpy(generated_header->graphical_object_name, descriptive_name, 16);
+
+   // Generate offsets and file size.
+   int cumulative_offset = memory_size_required_for_header_total;           
+   int graphic_position  = 0;
+   
+   for (int t = 0; t < no_images; graphic_position++, t++) {
+      // Store the current cumulative offset as the offset to this graphic.
+      generated_header->graphic_offsets[graphic_position] = cumulative_offset; 
+      
+      printf("Graphic %3d at %6d bytes. (My length is %6d)\n", t, cumulative_offset, ((LEMMINGS_GRAPHICAL_OBJECT_GRAPHIC *)(graphical_object_graphic_pointers[t]))->graphic_size);
+            
+      // Advance the offset by the length of this texture chunk. 
+      cumulative_offset += ((LEMMINGS_GRAPHICAL_OBJECT_GRAPHIC *)(graphical_object_graphic_pointers[t]))->graphic_size; 
+   }                                         
+     
+   printf("\nFinal length: %6d bytes.\n", cumulative_offset);
+   
+   // Copy palette
+   for (int palette_entry = 0; palette_entry < 16; palette_entry++) {
+      generated_header->ideal_palette[palette_entry] = extracted_palette[palette_entry]; 
+   }
+   
+   // The cumulative offset will contain the length of the final file!
+   generated_header->graphical_object_file_size = cumulative_offset;
+                                                                                       
+   // Open output file.
+   FILE *output_file = fopen(argv[MAIN_ARGUMENT_OUTPUT_FILE_NAME], "wb");
+   
+      // Write header, then textures.
+      fwrite(generated_header, 1, memory_size_required_for_header_total, output_file);      
+         
+         for (int t = 0; t < no_images; t++) {
+            // Write texture.
+            fwrite(graphical_object_graphic_pointers[t], 1, ((LEMMINGS_GRAPHICAL_OBJECT_GRAPHIC *)(graphical_object_graphic_pointers[t]))->graphic_size, output_file);               
+         }                                                      
+   
+   // Close output file
+   fclose(output_file);    
+   
+   // Epilogue:                         
+                                      
+   // Construct a final string.
+   char final_output_result_string[2048];
+   
+   sprintf(final_output_result_string, "Created %s (%d bytes):\n%d graphics (%d/%d).\n",
+                                       argv[MAIN_ARGUMENT_OUTPUT_FILE_NAME],
+                                       generated_header->graphical_object_file_size,
+                                       generated_header->no_total_frames,
+                                       generated_header->no_primary_frames,
+                                       generated_header->no_secondary_frames);  
+   
+   // Destroy ALL objects in the vectors, and terminate.
+   for (int t = 0; t < no_images; t++) {
+      printf("Killing graphic %3d. (%d bytes)\n", t, ((LEMMINGS_GRAPHICAL_OBJECT_GRAPHIC *)(graphical_object_graphic_pointers[t]))->graphic_size);
+      delete[] ((unsigned char *)(graphical_object_graphic_pointers[t]));
+   }             
+   
+   // Destroy the header array.
+   printf("Killing header.\n");
+   delete[] ((unsigned char *)(generated_header));
+         
+   printf(final_output_result_string);            
+         
+   return 0;
+                     
+      // At this point, I would like to thank Lode Vandevenne
+      // without whom this application would not have been possible.
+      // Kudos to you! LodePNG has performed admirably once again!      
+}
