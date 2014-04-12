@@ -1,0 +1,48 @@
+# Change the following values to configure Lemmings DS!
+
+# Please keep this file in the root directory of your card.
+
+# Don't add any extra lines to this file:
+# They'll disappear when Lemmings DS is next run.
+
+# 'Lemmings DS Directory' should be set to the location
+# of the Lemmings DS files on your flash media.
+# Please use Unix style directories (/games/blah/LemmingsDS)
+# It should have a starting forwardslash.
+# It should not have a trailing forwardslash.
+# NOTE: If Lemmings DS lives in the root, LEAVE A BLANK LINE
+# after 'Lemmings DS Directory'
+
+Lemmings DS Directory
+/LemmingsDS
+
+# 'Sound/Music Preference' controls whether sound or music will be played.
+# Available options are:
+
+# Music and Sound for both music and sound.
+# Music           for just music.
+# Sound           for just sound.
+# Silence         for nothing.
+
+Sound/Music Preference
+Music and Sound
+
+# 'Control Style' determines the default control style to use:
+# Available options are:
+
+# Tapper Hold
+# Tapper Toggle
+# Holder
+# Tactics Hold
+# Tactics Toggle
+
+Control Style
+Tapper Hold
+
+# 'Cursor Extension Size' affects the active range of the stylus:
+# A larger number will make Lemmings easier to click, but reduces
+# precision.
+# Specify a whole number in the range 0 to 9. The default is 1.
+
+Cursor Extension Size
+1
